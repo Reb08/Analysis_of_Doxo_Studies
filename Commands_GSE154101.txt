@@ -1,0 +1,63 @@
+# Download SRA files and extract FASTQ files
+# "prefetch" and "fasterq-dump" version 3.0.1
+# Ran on 07/02/2023
+
+prefetch -v SRR12185248 SRR12185249 SRR12185250 SRR12185251
+
+fasterq-dump scratch/sra/SRR12185248.sra scratch/sra/SRR12185249.sra scratch/sra/SRR12185250.sra scratch/sra/SRR12185251.sra
+
+Ready for FASTP
+# "fastp" version 0.23.2
+# Ran on 07/02/2023
+
+./fastp -i data/Doxo3_GSE154101/Fastp/SRR12185248.fastq -o data/Doxo3_GSE154101/Fastp/SRR12185248_trimmed.fastq -h data/Doxo3_GSE154101/Fastp/SRR12185248-fastp.html -j data/Doxo3_GSE154101/Fastp/SRR12185248-fastp.json
+./fastp -i data/Doxo3_GSE154101/Fastp/SRR12185249.fastq -o data/Doxo3_GSE154101/Fastp/SRR12185249_trimmed.fastq -h data/Doxo3_GSE154101/Fastp/SRR12185249-fastp.html -j data/Doxo3_GSE154101/Fastp/SRR12185249-fastp.json
+./fastp -i data/Doxo3_GSE154101/Fastp/SRR12185250.fastq -o data/Doxo3_GSE154101/Fastp/SRR12185250_trimmed.fastq -h data/Doxo3_GSE154101/Fastp/SRR12185250-fastp.html -j data/Doxo3_GSE154101/Fastp/SRR12185250-fastp.json
+./fastp -i data/Doxo3_GSE154101/Fastp/SRR12185251.fastq -o data/Doxo3_GSE154101/Fastp/SRR12185251_trimmed.fastq -h data/Doxo3_GSE154101/Fastp/SRR12185251-fastp.html -j data/Doxo3_GSE154101/Fastp/SRR12185251-fastp.json
+
+
+# Align the sequence reads to the genome using STAR
+# "STAR" version 2.7.9a
+# Ran on 07/02/2023
+
+STAR --runMode alignReads --runThreadN 8 --genomeDir data/reference/ --outSAMtype BAM SortedByCoordinate --quantMode GeneCounts --outReadsUnmapped Fastx --sjdbGTFfile data/reference/Homo_sapiens.GRCh38.109.gtf --readFilesIn data/Doxo3_GSE154101/Fastp/SRR12185248_trimmed.fastq --outFileNamePrefix data/Doxo3_GSE154101/Alignments/SRR12185248_
+STAR --runMode alignReads --runThreadN 8 --genomeDir data/reference/ --outSAMtype BAM SortedByCoordinate --quantMode GeneCounts --outReadsUnmapped Fastx --sjdbGTFfile data/reference/Homo_sapiens.GRCh38.109.gtf --readFilesIn data/Doxo3_GSE154101/Fastp/SRR12185249_trimmed.fastq --outFileNamePrefix data/Doxo3_GSE154101/Alignments/SRR12185249_
+STAR --runMode alignReads --runThreadN 8 --genomeDir data/reference/ --outSAMtype BAM SortedByCoordinate --quantMode GeneCounts --outReadsUnmapped Fastx --sjdbGTFfile data/reference/Homo_sapiens.GRCh38.109.gtf --readFilesIn data/Doxo3_GSE154101/Fastp/SRR12185250_trimmed.fastq --outFileNamePrefix data/Doxo3_GSE154101/Alignments/SRR12185250_
+STAR --runMode alignReads --runThreadN 8 --genomeDir data/reference/ --outSAMtype BAM SortedByCoordinate --quantMode GeneCounts --outReadsUnmapped Fastx --sjdbGTFfile data/reference/Homo_sapiens.GRCh38.109.gtf --readFilesIn data/Doxo3_GSE154101/Fastp/SRR12185251_trimmed.fastq --outFileNamePrefix data/Doxo3_GSE154101/Alignments/SRR12185251_
+
+# Generate a gene matrix
+
+paste data/Doxo3_GSE154101/Alignments/SRR12185250_ReadsPerGene.out.tab data/Doxo3_GSE154101/Alignments/SRR12185251_ReadsPerGene.out.tab data/Doxo3_GSE154101/Alignments/SRR12185248_ReadsPerGene.out.tab data/Doxo3_GSE154101/Alignments/SRR12185249_ReadsPerGene.out.tab | cut -f1,4,8,12,16 | tail -n +5 > data/Doxo3_GSE154101/tmpfile
+cat data/Doxo3_GSE154101/tmpfile | sed "s/^gene://" > data/Doxo3_GSE154101/gene_count_stranded_0_05_GTF109.txt
+
+# Run edgeR on R to derive differentially expressed genes
+R
+library(edgeR)
+library(GenomicFeatures)
+library(tidyverse)
+
+
+x <- as.matrix(read.delim("Files_Doxo3/gene_count_stranded_0_05_GTF109.txt", row.names = 1))
+colnames(x) <- c("Ctrl1", "Ctrl2", "Doxo1", "Doxo2")
+y <- DGEList(counts=x)
+y <- calcNormFactors(y)
+d <-cpm(y)
+countCheck <- d > 1  
+keep <- which(rowSums(countCheck) >= 2)
+y <- y[keep,]                       # remove low counts from count matrix and from CPM matrix
+d <- d[keep,]
+d <- as.data.frame(d) 
+y$samples$lib.size <- colSums(y$counts)
+
+# Calculate DEGs
+group = factor(c(1,1,2,2))  
+data.frame(Sample=colnames(y),group)
+design <- model.matrix(~group)
+y <- estimateGLMCommonDisp(y, design)  
+y <- estimateGLMTrendedDisp(y, design)
+y <- estimateGLMTagwiseDisp(y, design)
+fit <- glmFit(y, design)
+lrt.2vs1 <- glmLRT(fit, coef = 2)
+ratio_2vs1 <- as.data.frame(topTags(lrt.2vs1, n = "Inf")$table)
+
+q()
