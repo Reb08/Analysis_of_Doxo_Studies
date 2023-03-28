@@ -39,7 +39,7 @@ STAR --runMode alignReads --runThreadN 8 --genomeDir data/reference --outSAMtype
 # Generate a gene matrix
 
 paste data/Doxo2_GSE198396/Alignments/SRR18298601_ReadsPerGene.out.tab data/Doxo2_GSE198396/Alignments/SRR18298602_ReadsPerGene.out.tab data/Doxo2_GSE198396/Alignments/SRR18298603_ReadsPerGene.out.tab data/Doxo2_GSE198396/Alignments/SRR18298595_ReadsPerGene.out.tab data/Doxo2_GSE198396/Alignments/SRR18298596_ReadsPerGene.out.tab data/Doxo2_GSE198396/Alignments/SRR18298597_ReadsPerGene.out.tab data/Doxo2_GSE198396/Alignments/SRR18298598_ReadsPerGene.out.tab data/Doxo2_GSE198396/Alignments/SRR18298599_ReadsPerGene.out.tab data/Doxo2_GSE198396/Alignments/SRR18298600_ReadsPerGene.out.tab cut -f1,4,8,12,16,20,24,28,32,36 | tail -n +5 > data/Doxo2_GSE198396/tmpfile
-cat data/Doxo2_GSE198396/tmpfile | sed 's/^gene://' > data/Doxo2_GSE198396/gene_count_stranded_prol_doxo.txt
+cat data/Doxo2_GSE198396/tmpfile | sed 's/^gene://' > data/Doxo2_GSE198396/gene_count_stranded_prol_doxo_GTF109.txto.txt
 
 
 # Run edgeR on R to derive differentially expressed genes
