@@ -86,7 +86,7 @@ library(tidyverse)
 
 library(GenomicFeatures)
 
-x <- read.delim("gene_count_stranded_0_350.txt", header=F, row.names=1)
+x <- as.matrix(read.delim("Files_Doxo1/gene_count_stranded_0_350_GTF109.txt", row.names = 1))
 colnames(x) <- colnames(count_matrix_842)<-c("0_P130_ctrl_1", "0_P130_ctrl_2", "0_P130_siP107_1", "0_P130_siP107_2", "0_P130+RB1_ctrl_1", "0_P130+RB1_ctrl_2", "0_P130+RB1_siP107_1", "0_P130+RB1_siP107_2", "Doxo_P130_ctrl_1", "Doxo_P130_ctrl_2", "Doxo_P130_siP107_1", "Doxo_P130_siP107_2","Doxo_P130+RB1_ctrl_1", "Doxo_P130+RB1_ctrl_2","Doxo_P130+RB1_siP107_1", "Doxo_P130+RB1_siP107_2")
 y <- DGEList(counts=x)  # creating a DEG object
 y <- calcNormFactors(y)  # normalise library size
