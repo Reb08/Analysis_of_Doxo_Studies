@@ -77,6 +77,7 @@ $ nice cat tmpfile | sed "s/^gene://" > gene_count_stranded_0_350.txt
 # Run edgeR on R to derive differentially expressed genes
 $ R
 library(edgeR)
+library(tidyverse)
 
 
 (if (!require("BiocManager", quietly = TRUE))
