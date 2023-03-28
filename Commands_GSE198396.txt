@@ -1,0 +1,85 @@
+# Download SRA files and extract FASTQ files
+# "prefetch" and "fasterq-dump" version 3.0.1
+# Ran on 27/01/2023
+
+prefetch -v SRR18298595 SRR18298596 SRR18298597 SRR18298598 SRR18298599 SRR18298600 SRR18298601 SRR18298602 SRR18298603
+
+fasterq-dump SRR18298595.sra SRR18298596.sra SRR18298597.sra SRR18298598.sra SRR18298599.sra SRR18298600.sra SRR18298601.sra SRR18298602.sra SRR18298603.sra
+
+
+Ready for FASTP
+# "fastp" version 0.23.2
+# Ran on 05/02/2023
+
+./fastp -i data/Doxo2_GSE198396/Fastp/SRR18298595_1.fastq -I data/Doxo2_GSE198396/Fastp/SRR18298595_2.fastq -o data/Doxo2_GSE198396/Fastp/SRR18298595_1.trimmed.fastq -O data/Doxo2_GSE198396/Fastp/SRR18298595_2.trimmed.fastq -h data/Doxo2_GSE198396/Fastp/SRR18298595-fastp.html -j data/Doxo2_GSE198396/Fastp/SRR18298595_fastp.json
+./fastp -i data/Doxo2_GSE198396/Fastp/SRR18298596_1.fastq -I data/Doxo2_GSE198396/Fastp/SRR18298596_2.fastq -o data/Doxo2_GSE198396/Fastp/SRR18298596_1.trimmed.fastq -O data/Doxo2_GSE198396/Fastp/SRR18298596_2.trimmed.fastq -h data/Doxo2_GSE198396/Fastp/SRR18298596-fastp.html -j data/Doxo2_GSE198396/Fastp/SRR18298596_fastp.json
+./fastp -i data/Doxo2_GSE198396/Fastp/SRR18298597_1.fastq -I data/Doxo2_GSE198396/Fastp/SRR18298597_2.fastq -o data/Doxo2_GSE198396/Fastp/SRR18298597_1.trimmed.fastq -O data/Doxo2_GSE198396/Fastp/SRR18298597_2.trimmed.fastq -h data/Doxo2_GSE198396/Fastp/SRR18298597-fastp.html -j data/Doxo2_GSE198396/Fastp/SRR18298597_fastp.json
+./fastp -i data/Doxo2_GSE198396/Fastp/SRR18298598_1.fastq -I data/Doxo2_GSE198396/Fastp/SRR18298598_2.fastq -o data/Doxo2_GSE198396/Fastp/SRR18298598_1.trimmed.fastq -O data/Doxo2_GSE198396/Fastp/SRR18298598_2.trimmed.fastq -h data/Doxo2_GSE198396/Fastp/SRR18298598-fastp.html -j data/Doxo2_GSE198396/Fastp/SRR18298598_fastp.json
+./fastp -i data/Doxo2_GSE198396/Fastp/SRR18298599_1.fastq -I data/Doxo2_GSE198396/Fastp/SRR18298599_2.fastq -o data/Doxo2_GSE198396/Fastp/SRR18298599_1.trimmed.fastq -O data/Doxo2_GSE198396/Fastp/SRR18298599_2.trimmed.fastq -h data/Doxo2_GSE198396/Fastp/SRR18298599-fastp.html -j data/Doxo2_GSE198396/Fastp/SRR18298599_fastp.json
+./fastp -i data/Doxo2_GSE198396/Fastp/SRR18298600_1.fastq -I data/Doxo2_GSE198396/Fastp/SRR18298600_2.fastq -o data/Doxo2_GSE198396/Fastp/SRR18298600_1.trimmed.fastq -O data/Doxo2_GSE198396/Fastp/SRR18298600_2.trimmed.fastq -h data/Doxo2_GSE198396/Fastp/SRR18298600-fastp.html -j data/Doxo2_GSE198396/Fastp/SRR18298600_fastp.json
+./fastp -i data/Doxo2_GSE198396/Fastp/SRR18298601_1.fastq -I data/Doxo2_GSE198396/Fastp/SRR18298601_2.fastq -o data/Doxo2_GSE198396/Fastp/SRR18298601_1.trimmed.fastq -O data/Doxo2_GSE198396/Fastp/SRR18298601_2.trimmed.fastq -h data/Doxo2_GSE198396/Fastp/SRR18298601-fastp.html -j data/Doxo2_GSE198396/Fastp/SRR18298601_fastp.json
+./fastp -i data/Doxo2_GSE198396/Fastp/SRR18298602_1.fastq -I data/Doxo2_GSE198396/Fastp/SRR18298602_2.fastq -o data/Doxo2_GSE198396/Fastp/SRR18298602_1.trimmed.fastq -O data/Doxo2_GSE198396/Fastp/SRR18298602_2.trimmed.fastq -h data/Doxo2_GSE198396/Fastp/SRR18298602-fastp.html -j data/Doxo2_GSE198396/Fastp/SRR18298602_fastp.json
+./fastp -i data/Doxo2_GSE198396/Fastp/SRR18298603_1.fastq -I data/Doxo2_GSE198396/Fastp/SRR18298603_2.fastq -o data/Doxo2_GSE198396/Fastp/SRR18298603_1.trimmed.fastq -O data/Doxo2_GSE198396/Fastp/SRR18298603_2.trimmed.fastq -h data/Doxo2_GSE198396/Fastp/SRR18298603-fastp.html -j data/Doxo2_GSE198396/Fastp/SRR18298603_fastp.json
+
+
+# Align the sequence reads to the genome using STAR
+# "STAR" version 2.7.9a
+# Ran on 05/02/2023 & 06/02/2023
+
+STAR --runMode alignReads --runThreadN 8 --genomeDir data/reference --outSAMtype BAM SortedByCoordinate --quantMode GeneCounts --outReadsUnmapped Fastx --sjdbGTFfile data/reference/Homo_sapiens.GRCh38.109.gtf --readFilesIn data/Doxo2_GSE198396/Fastp/SRR18298595_1.trimmed.fastq data/Doxo2_GSE198396/Fastp/SRR18298595_2.trimmed.fastq --outFileNamePrefix data/Doxo2_GSE198396/Alignments/SRR18298595_
+STAR --runMode alignReads --runThreadN 8 --genomeDir data/reference --outSAMtype BAM SortedByCoordinate --quantMode GeneCounts --outReadsUnmapped Fastx --sjdbGTFfile data/reference/Homo_sapiens.GRCh38.109.gtf --readFilesIn data/Doxo2_GSE198396/Fastp/SRR18298596_1.trimmed.fastq data/Doxo2_GSE198396/Fastp/SRR18298596_2.trimmed.fastq --outFileNamePrefix data/Doxo2_GSE198396/Alignments/SRR18298596_
+STAR --runMode alignReads --runThreadN 8 --genomeDir data/reference --outSAMtype BAM SortedByCoordinate --quantMode GeneCounts --outReadsUnmapped Fastx --sjdbGTFfile data/reference/Homo_sapiens.GRCh38.109.gtf --readFilesIn data/Doxo2_GSE198396/Fastp/SRR18298597_1.trimmed.fastq data/Doxo2_GSE198396/Fastp/SRR18298597_2.trimmed.fastq --outFileNamePrefix data/Doxo2_GSE198396/Alignments/SRR18298597_
+STAR --runMode alignReads --runThreadN 8 --genomeDir data/reference --outSAMtype BAM SortedByCoordinate --quantMode GeneCounts --outReadsUnmapped Fastx --sjdbGTFfile data/reference/Homo_sapiens.GRCh38.109.gtf --readFilesIn data/Doxo2_GSE198396/Fastp/SRR18298598_1.trimmed.fastq data/Doxo2_GSE198396/Fastp/SRR18298598_2.trimmed.fastq --outFileNamePrefix data/Doxo2_GSE198396/Alignments/SRR18298598_
+STAR --runMode alignReads --runThreadN 8 --genomeDir data/reference --outSAMtype BAM SortedByCoordinate --quantMode GeneCounts --outReadsUnmapped Fastx --sjdbGTFfile data/reference/Homo_sapiens.GRCh38.109.gtf --readFilesIn data/Doxo2_GSE198396/Fastp/SRR18298599_1.trimmed.fastq data/Doxo2_GSE198396/Fastp/SRR18298599_2.trimmed.fastq --outFileNamePrefix data/Doxo2_GSE198396/Alignments/SRR18298599_
+STAR --runMode alignReads --runThreadN 8 --genomeDir data/reference --outSAMtype BAM SortedByCoordinate --quantMode GeneCounts --outReadsUnmapped Fastx --sjdbGTFfile data/reference/Homo_sapiens.GRCh38.109.gtf --readFilesIn data/Doxo2_GSE198396/Fastp/SRR18298600_1.trimmed.fastq data/Doxo2_GSE198396/Fastp/SRR18298600_2.trimmed.fastq --outFileNamePrefix data/Doxo2_GSE198396/Alignments/SRR18298600_
+STAR --runMode alignReads --runThreadN 8 --genomeDir data/reference --outSAMtype BAM SortedByCoordinate --quantMode GeneCounts --outReadsUnmapped Fastx --sjdbGTFfile data/reference/Homo_sapiens.GRCh38.109.gtf --readFilesIn data/Doxo2_GSE198396/Fastp/SRR18298601_1.trimmed.fastq data/Doxo2_GSE198396/Fastp/SRR18298601_2.trimmed.fastq --outFileNamePrefix data/Doxo2_GSE198396/Alignments/SRR18298601_
+STAR --runMode alignReads --runThreadN 8 --genomeDir data/reference --outSAMtype BAM SortedByCoordinate --quantMode GeneCounts --outReadsUnmapped Fastx --sjdbGTFfile data/reference/Homo_sapiens.GRCh38.109.gtf --readFilesIn data/Doxo2_GSE198396/Fastp/SRR18298602_1.trimmed.fastq data/Doxo2_GSE198396/Fastp/SRR18298602_2.trimmed.fastq --outFileNamePrefix data/Doxo2_GSE198396/Alignments/SRR18298602_
+STAR --runMode alignReads --runThreadN 8 --genomeDir data/reference --outSAMtype BAM SortedByCoordinate --quantMode GeneCounts --outReadsUnmapped Fastx --sjdbGTFfile data/reference/Homo_sapiens.GRCh38.109.gtf --readFilesIn data/Doxo2_GSE198396/Fastp/SRR18298603_1.trimmed.fastq data/Doxo2_GSE198396/Fastp/SRR18298603_2.trimmed.fastq --outFileNamePrefix data/Doxo2_GSE198396/Alignments/SRR18298603_
+
+# Generate a gene matrix
+
+paste data/Doxo2_GSE198396/Alignments/SRR18298601_ReadsPerGene.out.tab data/Doxo2_GSE198396/Alignments/SRR18298602_ReadsPerGene.out.tab data/Doxo2_GSE198396/Alignments/SRR18298603_ReadsPerGene.out.tab data/Doxo2_GSE198396/Alignments/SRR18298595_ReadsPerGene.out.tab data/Doxo2_GSE198396/Alignments/SRR18298596_ReadsPerGene.out.tab data/Doxo2_GSE198396/Alignments/SRR18298597_ReadsPerGene.out.tab data/Doxo2_GSE198396/Alignments/SRR18298598_ReadsPerGene.out.tab data/Doxo2_GSE198396/Alignments/SRR18298599_ReadsPerGene.out.tab data/Doxo2_GSE198396/Alignments/SRR18298600_ReadsPerGene.out.tab cut -f1,4,8,12,16,20,24,28,32,36 | tail -n +5 > data/Doxo2_GSE198396/tmpfile
+cat data/Doxo2_GSE198396/tmpfile | sed 's/^gene://' > data/Doxo2_GSE198396/gene_count_stranded_prol_doxo.txt
+
+
+# Run edgeR on R to derive differentially expressed genes
+R
+library(edgeR)
+library(GenomicFeatures)
+library(tidyverse)
+
+
+x <- as.matrix(read.delim("Files_Doxo2/gene_count_stranded_prol_doxo_GTF109.txt", row.names = 1))
+colnames(x) <- c("Ctrl1", "Ctrl2", "Ctrl3", "Doxo_PDL1+_1", "Doxo_PDL1+_2", "Doxo_PDL1+_3", "Doxo_PDL1-_1", "Doxo_PDL1-_2", "Doxo_PDL1-_3")
+y <- DGEList(counts=y)  # creating a DEG object
+y <- calcNormFactors(y) 
+
+d <- cpm(y)  # calculates CPM
+
+countCheck <- d > 1
+keep <- which(rowSums(countCheck) >= 3)
+y <- y[keep,]                          # remove low counts from count matrix and from CPM matrix
+d <- d[keep,] 
+d <- as.data.frame(d)
+
+y$samples$lib.size <- colSums(y$counts)
+
+group = factor(c(1,1,1,2,2,2,3,3,3))  # group replicas together
+data.frame(Sample=colnames(y),group)
+
+# Calculate differentially expressed genes
+design <- model.matrix(~group)
+y <- estimateGLMCommonDisp(y, design)  
+y <- estimateGLMTrendedDisp(y, design)
+y <- estimateGLMTagwiseDisp(y, design)
+fit <- glmFit(y, design)
+
+lrt.2vs1 <- glmLRT(fit, coef = 2)
+ratio_2vs1 <- as.data.frame(topTags(lrt.2vs1, n = "Inf")$table)
+
+lrt.3vs1 <- glmLRT(fit, coef = 3)
+ratio_3vs1 <- as.data.frame(topTags(lrt.3vs1, n = "Inf")$table)
+
+
+q()
+
