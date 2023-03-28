@@ -70,12 +70,12 @@ STAR --runMode alignReads --runThreadN 8 --genomeDir reference/ --outSAMtype BAM
 
 # Generate a gene matrix
 
-$ nice paste Alignments/SRR9969330__ReadsPerGene.out.tab Alignments/SRR9969332__ReadsPerGene.out.tab Alignments/SRR9969334__ReadsPerGene.out.tab Alignments/SRR9969336__ReadsPerGene.out.tab Alignments/SRR9969338__ReadsPerGene.out.tab Alignments/SRR9969340__ReadsPerGene.out.tab Alignments/SRR9969342__ReadsPerGene.out.tab Alignments/SRR9969344__ReadsPerGene.out.tab Alignments/SRR9969331__ReadsPerGene.out.tab Alignments/SRR9969333__ReadsPerGene.out.tab Alignments/SRR9969335__ReadsPerGene.out.tab Alignments/SRR9969337__ReadsPerGene.out.tab Alignments/SRR9969339__ReadsPerGene.out.tab Alignments/SRR9969341__ReadsPerGene.out.tab Alignments/SRR9969343__ReadsPerGene.out.tab Alignments/SRR9969345__ReadsPerGene.out.tab | cut -f1,4,8,12,16,20,24,28,32,36,40,44,48,52,56,60,64 | tail -n +5 > tmpfile
-$ nice cat tmpfile | sed "s/^gene://" > gene_count_stranded_0_350.txt
+paste Alignments/SRR9969330__ReadsPerGene.out.tab Alignments/SRR9969332__ReadsPerGene.out.tab Alignments/SRR9969334__ReadsPerGene.out.tab Alignments/SRR9969336__ReadsPerGene.out.tab Alignments/SRR9969338__ReadsPerGene.out.tab Alignments/SRR9969340__ReadsPerGene.out.tab Alignments/SRR9969342__ReadsPerGene.out.tab Alignments/SRR9969344__ReadsPerGene.out.tab Alignments/SRR9969331__ReadsPerGene.out.tab Alignments/SRR9969333__ReadsPerGene.out.tab Alignments/SRR9969335__ReadsPerGene.out.tab Alignments/SRR9969337__ReadsPerGene.out.tab Alignments/SRR9969339__ReadsPerGene.out.tab Alignments/SRR9969341__ReadsPerGene.out.tab Alignments/SRR9969343__ReadsPerGene.out.tab Alignments/SRR9969345__ReadsPerGene.out.tab | cut -f1,4,8,12,16,20,24,28,32,36,40,44,48,52,56,60,64 | tail -n +5 > tmpfile
+cat tmpfile | sed "s/^gene://" > gene_count_stranded_0_350.txt
 
 
 # Run edgeR on R to derive differentially expressed genes
-$ R
+R
 library(edgeR)
 library(tidyverse)
 
