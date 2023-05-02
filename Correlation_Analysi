@@ -1,0 +1,32 @@
+library(tidyverse)
+library(biomaRt)
+
+gtf <- rtracklayer::import("Homo_sapiens.GRCh38.109.gtf")
+gtf_df <- as.data.frame(gtf)
+genes <- gtf_df[gtf_df$type == "gene", ]
+protein_coding_genes <- genes[genes$gene_biotype == "protein_coding", ]
+
+PC_genes <- read_delim("...-All_Samples.txt", delim=" ")  # load .txt file containing table with Samples in columns, genes in rows and CPM values
+
+lnc_genes <- read_delim("....txt", col_names = F, delim=" ") # load .txt file with list of lncRNAs 
+colnames(lnc_genes) <- "Ensembl_ID"
+
+lnc_CPM <- PC_genes %>% filter(PC_genes$Ensembl_ID %in% lnc_genes$Ensembl_ID)
+lnc_CPM <- as.matrix(lnc_CPM) 
+
+PC_CPM <- PC_genes %>% filter(PC_genes$Ensembl_ID %in% protein_coding_genes$gene_id)
+PC_CPM <- as.matrix(PC_CPM) 
+
+rownames(PC_CPM) <- PC_genes %>% filter(PC_genes$Ensembl_ID %in% protein_coding_genes$gene_id) %>% pull(Ensembl_ID)
+
+sig_genes <- character()
+for (i in 1:nrow(lnc_CPM)) {
+  y <- lnc_CPM[i,]
+  cor_list <- apply(PC_CPM, 1, function(x) cor.test(x, y)$p.value)
+  cor_list_adj <- p.adjust(cor_list, method = "fdr")
+  sig_genes_i <- names(which(cor_list_adj <0.001))
+  sig_genes <- c(sig_genes, sig_genes_i)
+  
+}
+
+write.table(sig_genes, "....txt", quote=F, row.names=F, col.names=F) # save results
