@@ -1,0 +1,153 @@
+library(tidyverse)
+library(GenomicRanges)
+library(biomaRt)
+
+ensembl <- rtracklayer::import("Homo_sapiens.GRCh38.109.gtf")
+seqlevels(ensembl) <- paste0("chr",seqlevels(ensembl))
+lncbook <- rtracklayer::import("lncRNA_LncBookv2.0_GRCh38.gtf")
+var <- read_csv("variation_LncBook2.0.csv")
+cons <- read_csv("conservation_LncBook2.0.csv")
+meth <- read_csv("methylation_LncBook2.0.csv")
+mirna <- read_csv("lncrna_mirna_miRandaAndTargetScanAndRNAhybrid_LncBook2.0.csv",col_names = F)
+
+
+lncbook_gencode <- rtracklayer::import("LncBookv2.0_GENCODEv34_GRCh38.gtf")
+
+lncbook_gene <- lncbook[lncbook$type=="gene"]
+lncbook_gencode_gene <- lncbook_gencode[lncbook_gencode$type=="gene" & lncbook_gencode$gene_type=="lncRNA"]
+ensembl_pc <- ensembl[ensembl$gene_biotype=="protein_coding"]
+
+mart <- useMart(biomart="ensembl", dataset="hsapiens_gene_ensembl")
+
+
+convertNamesAndAnnotate <- function(x,exper="Doxo")
+{
+  k <- suppressWarnings(lncbook_gencode_gene[subjectHits(GenomicRanges::findOverlaps(ensembl[ensembl$gene_id==x & ensembl$type=="gene"],lncbook_gencode_gene,type="equal"))])
+  if(length(k)==0)
+  {
+    k <- suppressWarnings(lncbook_gencode_gene[subjectHits(GenomicRanges::findOverlaps(ensembl[ensembl$gene_id==x & ensembl$type=="gene"],lncbook_gencode_gene))])
+  }
+  if(length(unique(k$gene_id))>1)
+  {
+    k <- suppressWarnings(lncbook_gencode_gene[nearest(ensembl[ensembl$gene_id==x & ensembl$type=="gene"],lncbook_gencode_gene)])
+  }
+  if(length(k)==0)
+  {
+    pc_near <- ensembl_pc[nearest(ensembl[ensembl$gene_id==x & ensembl$type=="gene"],ensembl_pc)]$gene_name
+    
+    return(c(exper,x,NA, NA, NA,NA,NA,pc_near))
+  }else{
+    y <- unique(k$gene_id)
+    class <- k$gene_classification
+    pc_near <- ensembl_pc[nearest(ensembl[ensembl$gene_id==x & ensembl$type=="gene"],ensembl_pc)]$gene_name
+    this_cons <- cons %>% filter(`Gene ID`==y & Assembly=="mm39") %>% pull(Conservation)
+    this_mirna <- paste(unique(mirna %>% filter(X1==y) %>% pull(X11)),collapse=",")
+    this_GWAS <- paste(unique(var %>% filter(`Gene ID`==y) %>% pull(`GWAS Trait`)),collapse=",")
+    return(c(exper,x,y,class,this_cons,this_mirna,this_GWAS,pc_near))
+  }
+}
+
+
+make_annotations <- function(data,exper_name,as_parallel=F){
+  sig <- data %>% filter(abs(logFC)>1 & Biotype=="lncRNA" & FDR<0.05)
+  if(nrow(sig)>0)
+  {
+    sig_anno <- sig %>% dplyr::select(Ensembl_ID,Gene_symbol,logFC,FDR)
+    x_vec <- sig$Ensembl_ID
+    
+    if(as_parallel){
+      anno_list <- foreach(i=1:length(x_vec)) %dopar% {
+        convertNamesAndAnnotate(x_vec[i],exper=exper_name)
+      }
+    }else{
+      anno_list <- list()
+      for(i in 1:length(x_vec)){
+        anno_list[[paste(i)]] <- (convertNamesAndAnnotate(x_vec[i],exper=exper_name))
+      }
+    }
+    res <- as_tibble(do.call(rbind,anno_list))
+    colnames(res) <- c("Comparison","Ensembl_ID", "LncBook ID", "Type","Conservation","miRNA","GWAS","nearest PC")
+    sig_anno <- sig_anno %>% left_join(res,by="Ensembl_ID")
+    return(sig_anno)
+  }else{
+    return(NA) 
+  }
+}
+
+
+to_anno <- list.files("data/",pattern="-CPM.txt",full.names = T)
+fnames <- list.files("data/",pattern="-CPM.txt",full.names = F)
+comparisons <- gsub("GSE.+\\-(.+_vs_.+)\\-CPM.txt","\\1",fnames)
+for(i in 1:length(to_anno)){
+  data <- read_delim(to_anno[i])
+  
+  lncAnno <- make_annotations(data, comparisons[i],as_parallel=F)
+  if(!is.na(lncAnno))
+  {
+    tsave_name <- gsub("(-CPM)","-ANNOTATED_lncRNAs",to_anno[i])
+    write_tsv(lncAnno,file=paste0(tsave_name))
+  }
+}
+
+to_anno <- list.files("data/",pattern="-ANNOTATED_lncRNAs.txt",full.names = T)
+full_CPM <- list.files("data/",pattern="-CPM.txt",full.names = F)
+
+for (i in 1:length(to_anno)) {
+  
+  print(paste0("doing: ", to_anno[i]))
+  tsave_name <- paste0(to_anno[i],"-CORRELATED_lncRNAs_2.txt")
+  
+  m_anno <- read_delim(paste0("data/", to_anno[i], "-ANNOTATED_lncRNAs.txt"))
+  CPM <- read_delim(paste0("data/", full_CPM[i], "-CPM.txt"))
+  
+  m <- CPM %>% filter(CPM$Ensembl_ID %in% m_anno$Ensembl_ID)
+  m <- m[, -c(2:6)]
+  
+  CPM_genes <- tibble::column_to_rownames(CPM, "Ensembl_ID")
+  CPM_genes <- CPM_genes[, -c(1:5)]
+  
+  results <- data.frame(matrix(NA, nrow=nrow(m), ncol=3))
+  colnames(results) <- c("Ensembl_ID", "Top Corr Gene", "PValue")
+  
+  for (i in 1:nrow(m)) {
+    
+    # Calculate the correlations between m and the big table
+    correlations <- cor(t(m[i, -1]), t(CPM_genes))
+    
+    # Get the indices of the top correlated gene
+    corr <-  as.data.frame(t(correlations))
+    corr <- tibble::rownames_to_column(corr, "Ensembl_ID")
+    corr <- corr[order(abs(corr$V1),decreasing=T),]
+    top_gene <- corr$Ensembl_ID[2]
+    
+    # Calculate the p-value of the top correlation
+    p_value <- cor.test(t(m[i, -1]), t(CPM_genes[top_gene, ]))$p.value
+    
+    results[i, 1] <- m[i, ]$Ensembl_ID
+    results[i, 2] <- top_gene
+    results[i, 3] <- p_value
+  }
+  
+  if (any(results$PValue > 0.05)) {
+    print(paste0("The following top correlated genes have a p-value greater than 0.05:"))
+    print(results %>% filter(PValue > 0.05) %>% select(`Ensembl_ID`, `Top Corr Gene`))
+  }
+  
+  m_anno <- merge(m_anno, results, by="Ensembl_ID")
+  
+  gene_symbols <- getBM(filters= "ensembl_gene_id", attributes= c("ensembl_gene_id", "hgnc_symbol"),values=m_anno$`Top Corr Gene`,mart= mart)
+  
+  for (i in 1:nrow(gene_symbols)) {
+    if (gene_symbols$hgnc_symbol[i] == "") {
+      gene_symbols$hgnc_symbol[i] = gene_symbols$ensembl_gene_id[i]
+    }
+  }
+  
+  colnames(gene_symbols) <- c("Top Corr Gene", "Top correlated gene")
+  
+  m_anno <- merge(m_anno, gene_symbols, by="Top Corr Gene")
+  
+  m_anno <- m_anno[, c("Ensembl_ID", "Gene_symbol", "logFC", "FDR", "Comparison", "LncBook ID", "Type", "Conservation", "miRNA", "GWAS", "nearest PC", "Top correlated gene")]
+  
+  write_tsv(m_anno, file=tsave_name)
+}
