@@ -43,7 +43,6 @@ y <- DGEList(counts=x)
 y <- calcNormFactors(y)
 d <-cpm(y)
 d <-as.data.frame(d)
-y$samples$lib.size <- colSums(y$counts)
 
 # Calculate DEGs
 group = factor(c(1,1,2,2))  
