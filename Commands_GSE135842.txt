@@ -94,11 +94,8 @@ y <- calcNormFactors(y)  # normalise library size
 # Calculate CPM (counts per million) values
 d <-cpm(y)
 
-
 d <- as.data.frame(d)  # create CPM table to use for heatmaps
 
-# Recompute the library sizes 
-y$samples$lib.size <- colSums(y$counts)
 
 ######### Calculate differentially expressed genes
 ### 0_P130_ctrl vs Doxo_P130_ctrl
