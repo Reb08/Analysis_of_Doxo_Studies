@@ -94,11 +94,6 @@ y <- calcNormFactors(y)  # normalise library size
 # Calculate CPM (counts per million) values
 d <-cpm(y)
 
-# remove low counts from count matrix and from CPM matrix
-countCheck <- d > 1  
-keep <- which(rowSums(countCheck) >= 2)
-y <- y[keep,]                       
-d <- d[keep,]
 
 d <- as.data.frame(d)  # create CPM table to use for heatmaps
 
