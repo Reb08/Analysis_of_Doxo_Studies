@@ -42,11 +42,7 @@ colnames(x) <- c("Ctrl1", "Ctrl2", "Doxo1", "Doxo2")
 y <- DGEList(counts=x)
 y <- calcNormFactors(y)
 d <-cpm(y)
-countCheck <- d > 1  
-keep <- which(rowSums(countCheck) >= 2)
-y <- y[keep,]                       # remove low counts from count matrix and from CPM matrix
-d <- d[keep,]
-d <- as.data.frame(d) 
+d <-as.data.frame(d)
 y$samples$lib.size <- colSums(y$counts)
 
 # Calculate DEGs
