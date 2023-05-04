@@ -70,13 +70,7 @@ y <- DGEList(counts=x)  # creating a DEG object
 y <- calcNormFactors(y)  # normalise library size
 d <- cpm(y)  # calculates CPM
 
-countCheck <- d > 1
-keep <- which(rowSums(countCheck) >= 2)
-y <- y[keep,]                       # remove low counts from count matrix and from CPM matrix
-d <- d[keep,]
-
 d <- as.data.frame(d)  
-y$samples$lib.size <- colSums(y$counts)
 
 
 ######### Calculate differentially expressed genes
