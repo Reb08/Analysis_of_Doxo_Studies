@@ -55,14 +55,8 @@ y <- DGEList(counts=y)  # creating a DEG object
 y <- calcNormFactors(y) 
 
 d <- cpm(y)  # calculates CPM
-
-countCheck <- d > 1
-keep <- which(rowSums(countCheck) >= 3)
-y <- y[keep,]                          # remove low counts from count matrix and from CPM matrix
-d <- d[keep,] 
 d <- as.data.frame(d)
 
-y$samples$lib.size <- colSums(y$counts)
 
 group = factor(c(1,1,1,2,2,2,3,3,3))  # group replicas together
 data.frame(Sample=colnames(y),group)
