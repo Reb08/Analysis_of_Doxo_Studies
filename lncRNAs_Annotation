@@ -89,65 +89,74 @@ for(i in 1:length(to_anno)){
   }
 }
 
-to_anno <- list.files("data/",pattern="-ANNOTATED_lncRNAs.txt",full.names = T)
-full_CPM <- list.files("data/",pattern="-CPM.txt",full.names = F)
 
-for (i in 1:length(to_anno)) {
+#### Add most correlated gene 
+
+to_anno <- list("GSE135842-1-Control_P130_siCTRL-vs-DOXO_P130_siCTRL",
+                "GSE135842-2-Control_P130_siP107-vs-DOXO_P130_siP107",
+                "GSE135842-3-Control_RB+P130_siCTRL-vs-DOXO_RB-P130_siCTRL",
+                "GSE135842-4-Control_RB+P130_siP107-vs-DOXO_RB-P130_siP107")
+ 
+## un-comment them when needed  
+# to_anno <-  list("GSE198396-1-Normal-vs-PDL1_pos",
+#                  "GSE198396-2-Normal-vs-PDL1_neg")
+                 
+# to_anno <- read_tsv("GSE154101-Normal-vs-Doxo")
+
+
+# to_anno <-  list("GSE136631-1-FCBIC02-Par_ctrl-vs-Par_Doxo",
+#                      "GSE136631-2-SUM149-Par_ctrl-vs-Par_Doxo",
+#                      "GSE136631-3-FCBIC02-Par_ctrl-vs-DoxoR_ctrl",
+#                      "GSE136631-4-SUM149-Par_ctrl-vs-DoxoR_ctrl")
+
+m_anno <- read_tsv(paste0(to_anno[1], "-ANNOTATED_lncRNAs.txt"))    # change number based on file that is being run
+CPM <- read_delim("....-All_Samples.txt")   # read in correct file with CPM values for all samples in the study (e.g., GSE154101-All_Samples.txt)
+
+m <- CPM %>% filter(CPM$Ensembl_ID %in% m_anno$Ensembl_ID)
+m <- m[, -c(2,3)]  # remove columns with gene symbol and biotype
+
+CPM <- tibble::column_to_rownames(GSE135842_CPM, "Ensembl_ID")
+CPM <- CPM[, -c(1:2)] # remove columns with ensembl ID and gene symbol
+
+
+results <- data.frame(matrix(NA, nrow=nrow(m), ncol=2))
+colnames(results) <- c("Ensembl_ID", "Top Corr Gene")
+
+for (i in 1:nrow(m)) {
   
-  print(paste0("doing: ", to_anno[i]))
-  tsave_name <- paste0(to_anno[i],"-CORRELATED_lncRNAs_2.txt")
+  # Calculate the correlations between m and the big table
+  correlations <- cor(t(m[i, -1]), t(CPM))
+
+  # Get top correlated gene
+  corr <-  as.data.frame(t(correlations))
+  corr <- tibble::rownames_to_column(corr, "Ensembl_ID")
+  corr <- corr[order(abs(corr$V1),decreasing=T),]
+  top_gene <- corr$Ensembl_ID[2]
+
+  #o <- head(sort(abs(corr$V1), decreasing=T), 2)
+  #top_gene <- corr %>% filter(corr$V1 %in% o)
+
+  results[i, 1] <- m[i, ]$Ensembl_ID
+  results[i, 2] <- top_gene
+}
   
-  m_anno <- read_delim(paste0("data/", to_anno[i], "-ANNOTATED_lncRNAs.txt"))
-  CPM <- read_delim(paste0("data/", full_CPM[i], "-CPM.txt"))
+ m_anno <- merge(m_anno, results, by="Ensembl_ID")
   
-  m <- CPM %>% filter(CPM$Ensembl_ID %in% m_anno$Ensembl_ID)
-  m <- m[, -c(2:6)]
+ mart <- useMart(biomart="ensembl", dataset="hsapiens_gene_ensembl")
+ gene_symbols <- getBM(filters= "ensembl_gene_id", attributes= c("ensembl_gene_id", "hgnc_symbol"),values=m_anno$`Top Corr Gene`,mart= mart)
   
-  CPM_genes <- tibble::column_to_rownames(CPM, "Ensembl_ID")
-  CPM_genes <- CPM_genes[, -c(1:5)]
-  
-  results <- data.frame(matrix(NA, nrow=nrow(m), ncol=3))
-  colnames(results) <- c("Ensembl_ID", "Top Corr Gene", "PValue")
-  
-  for (i in 1:nrow(m)) {
-    
-    # Calculate the correlations between m and the big table
-    correlations <- cor(t(m[i, -1]), t(CPM_genes))
-    
-    # Get the indices of the top correlated gene
-    corr <-  as.data.frame(t(correlations))
-    corr <- tibble::rownames_to_column(corr, "Ensembl_ID")
-    corr <- corr[order(abs(corr$V1),decreasing=T),]
-    top_gene <- corr$Ensembl_ID[2]
-    
-    # Calculate the p-value of the top correlation
-    p_value <- cor.test(t(m[i, -1]), t(CPM_genes[top_gene, ]))$p.value
-    
-    results[i, 1] <- m[i, ]$Ensembl_ID
-    results[i, 2] <- top_gene
-    results[i, 3] <- p_value
-  }
-  
-  if (any(results$PValue > 0.05)) {
-    print(paste0("The following top correlated genes have a p-value greater than 0.05:"))
-    print(results %>% filter(PValue > 0.05) %>% select(`Ensembl_ID`, `Top Corr Gene`))
-  }
-  
-  m_anno <- merge(m_anno, results, by="Ensembl_ID")
-  
-  gene_symbols <- getBM(filters= "ensembl_gene_id", attributes= c("ensembl_gene_id", "hgnc_symbol"),values=m_anno$`Top Corr Gene`,mart= mart)
-  
-  for (i in 1:nrow(gene_symbols)) {
+ for (i in 1:nrow(gene_symbols)) {
     if (gene_symbols$hgnc_symbol[i] == "") {
       gene_symbols$hgnc_symbol[i] = gene_symbols$ensembl_gene_id[i]
     }
   }
   
-  colnames(gene_symbols) <- c("Top Corr Gene", "Top correlated gene")
+colnames(gene_symbols) <- c("Top Corr Gene", "Top correlated gene")
   
-  m_anno <- merge(m_anno, gene_symbols, by="Top Corr Gene")
+m_anno <- merge(m_anno, gene_symbols, by="Top Corr Gene")
   
-  m_anno <- m_anno[, c("Ensembl_ID", "Gene_symbol", "logFC", "FDR", "Comparison", "LncBook ID", "Type", "Conservation", "miRNA", "GWAS", "nearest PC", "Top correlated gene")]
+m_anno <- m_anno[, c("Ensembl_ID", "Gene_symbol", "logFC", "FDR", "Comparison", "LncBook ID", "Type", "Conservation", "miRNA", "GWAS", "nearest PC", "Top correlated gene")]
   
-  write_tsv(m_anno, file=tsave_name)
-}
+tsave_name <- paste0(to_anno[1],"-CORRELATED_lncRNAs.txt")   # change number based on file that is being run
+write_tsv(m_anno, file=tsave_name)
+
